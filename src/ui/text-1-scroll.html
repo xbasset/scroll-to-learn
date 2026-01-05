@@ -116,7 +116,11 @@
         width: min(560px, 92vw);
         margin: 0 auto;
         padding: 36px 34px 32px;
-        background: var(--surface);
+        background-color: var(--surface);
+        background-image: linear-gradient(160deg, rgba(12, 15, 22, 0.48), rgba(12, 15, 22, 0.72));
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         border: 1px solid var(--edge);
         border-radius: 22px;
         box-shadow: 0 22px 50px rgba(3, 6, 15, 0.5);
@@ -140,9 +144,38 @@
         pointer-events: none;
       }
 
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 22px;
+        box-shadow: inset 0 0 120px rgba(8, 10, 16, 0.45);
+        pointer-events: none;
+      }
+
+      .image-panel {
+        height: 150px;
+        margin: 12px 0 18px;
+        border-radius: 16px;
+        background-image: var(--card-bg);
+        background-size: cover;
+        background-position: center;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 0 50px rgba(6, 8, 12, 0.35);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .image-panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(10, 12, 18, 0.1), rgba(10, 12, 18, 0.65));
+      }
+
       .cover {
         padding: 48px 38px 40px;
-        background: linear-gradient(135deg, rgba(242, 166, 90, 0.08), transparent 70%), var(--surface);
+        background-image: linear-gradient(135deg, rgba(242, 166, 90, 0.18), rgba(12, 15, 22, 0.68));
       }
 
       .meta {
@@ -176,6 +209,8 @@
         border-radius: 12px;
         font-size: 13px;
         color: var(--muted);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
       }
 
       .post-title {
@@ -201,10 +236,12 @@
       }
 
       .panel {
-        background: var(--deep);
+        background: rgba(12, 15, 22, 0.6);
         border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 14px;
         padding: 14px 16px 12px;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
       }
 
       .panel-title {
@@ -232,8 +269,10 @@
         margin-bottom: 16px;
         padding: 14px 16px;
         border-radius: 14px;
-        background: rgba(15, 18, 28, 0.7);
+        background: rgba(15, 18, 28, 0.55);
         border: 1px solid rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
       }
 
       .excerpt-title {
@@ -263,8 +302,10 @@
         margin-top: 16px;
         padding: 18px 20px;
         border-radius: 16px;
-        background: linear-gradient(135deg, rgba(111, 214, 182, 0.08), transparent 65%), var(--deep);
+        background: linear-gradient(135deg, rgba(111, 214, 182, 0.08), transparent 65%), rgba(12, 15, 22, 0.55);
         border: 1px solid rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
       }
 
       .poem-stanza + .poem-stanza {
@@ -360,18 +401,20 @@
       <div class="progress"><span id="progress-bar"></span></div>
 
       <main class="feed" id="feed">
-        <article class="card cover in-view">
+        <article class="card cover in-view" style="--card-bg: url('images/text-1/cover.png');">
           <div class="meta">Feed littéraire</div>
           <h1 class="title">Chambre de la douleur</h1>
           <p class="subtitle">René Guy Cadou - lecture linéaire et parcours de sens</p>
+          <div class="image-panel"></div>
           <div class="source">
             Source principale : <strong>Chambre de la douleur</strong> (René Guy Cadou)
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/poem.png');">
           <div class="chip">Texte intégral</div>
           <h2 class="post-title">Le poème</h2>
+          <div class="image-panel"></div>
           <div class="poem">
             <div class="poem-stanza">
               <p class="poem-line">Une goutte de sang reste encore sur la clé</p>
@@ -407,9 +450,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s0-1-why-read.png');">
           <div class="chip">Orienter la lecture</div>
           <h2 class="post-title">Pourquoi lire Chambre de la douleur ?</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Un poème de deuil, mais surtout un poème de survie."</p>
           <p class="synth">Poème lyrique où Cadou transforme la perte du père en parcours intérieur, de la douleur à l'espérance.</p>
           <div class="excerpt">
@@ -431,9 +475,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s0-2-situation.png');">
           <div class="chip">Orienter la lecture</div>
           <h2 class="post-title">Situation de l'extrait</h2>
+          <div class="image-panel"></div>
           <p class="hook">"La chambre : un lieu clos pour dire l'infini."</p>
           <p class="synth">Un poème écrit après la mort du père, dans un espace symbolique : la chambre de la douleur.</p>
           <div class="excerpt">
@@ -455,9 +500,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s1-1-structure.png');">
           <div class="chip">Structure du poème</div>
           <h2 class="post-title">Une construction en 5 quintils</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Cinq moments pour traverser la perte."</p>
           <p class="synth">Le poème progresse en cinq quintils qui correspondent à cinq étapes émotionnelles.</p>
           <div class="excerpt">
@@ -480,9 +526,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s1-2-progression.png');">
           <div class="chip">Structure du poème</div>
           <h2 class="post-title">Une progression du désespoir vers l'espérance</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Du noir vers la lumière, sans effacer la douleur."</p>
           <p class="synth">Le poème ne nie pas la mort mais apprend à vivre avec.</p>
           <div class="excerpt">
@@ -504,9 +551,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s2-1-quintil-1.png');">
           <div class="chip">Lecture linéaire</div>
           <h2 class="post-title">Quintil 1 : l'entrée dans la douleur</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Tout commence par un choc."</p>
           <p class="synth">Une douleur immédiate, sans explication, exprimée par une écriture simple et brute.</p>
           <div class="excerpt">
@@ -529,9 +577,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s2-2-quintil-2.png');">
           <div class="chip">Lecture linéaire</div>
           <h2 class="post-title">Quintil 2 : dire la mort du père</h2>
+          <div class="image-panel"></div>
           <p class="hook">"La mort est dite sans pathos."</p>
           <p class="synth">La mort du père apparaît de manière presque neutre, ce qui renforce sa violence.</p>
           <div class="excerpt">
@@ -554,9 +603,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s2-3-quintil-3.png');">
           <div class="chip">Lecture linéaire</div>
           <h2 class="post-title">Quintil 3 : le désespoir du fils</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Quand la douleur devient intérieure."</p>
           <p class="synth">Le poète se replie sur lui-même, prisonnier de la chambre et du passé.</p>
           <div class="excerpt">
@@ -579,9 +629,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s2-4-quintil-4.png');">
           <div class="chip">Lecture linéaire</div>
           <h2 class="post-title">Quintil 4 : les retrouvailles symboliques</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Le mort revient autrement."</p>
           <p class="synth">Le père n'est plus vivant, mais il réapparaît dans la mémoire et l'imaginaire.</p>
           <div class="excerpt">
@@ -603,9 +654,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s2-5-quintil-5.png');">
           <div class="chip">Lecture linéaire</div>
           <h2 class="post-title">Quintil 5 : une ouverture vers la vie</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Respirer à nouveau."</p>
           <p class="synth">Le poème s'achève sur un apaisement et une possibilité de continuer à vivre.</p>
           <div class="excerpt">
@@ -627,9 +679,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s3-1-lyrisme.png');">
           <div class="chip">Thèmes et notions clés</div>
           <h2 class="post-title">Le lyrisme de la simplicité</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Dire beaucoup avec peu."</p>
           <p class="synth">Cadou choisit une écriture simple pour exprimer une émotion universelle.</p>
           <div class="excerpt">
@@ -649,9 +702,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s3-2-chambre.png');">
           <div class="chip">Thèmes et notions clés</div>
           <h2 class="post-title">La chambre : un espace symbolique</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Un lieu clos pour penser l'absence."</p>
           <p class="synth">La chambre représente l'enfermement intérieur du poète.</p>
           <div class="excerpt">
@@ -671,9 +725,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s3-3-reparation.png');">
           <div class="chip">Thèmes et notions clés</div>
           <h2 class="post-title">La poésie comme réparation</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Écrire pour survivre."</p>
           <p class="synth">Le poème transforme la douleur en parole et en lien.</p>
           <div class="excerpt">
@@ -692,9 +747,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s4-1-problematique.png');">
           <div class="chip">Outils pour l'oral</div>
           <h2 class="post-title">Problématique type (excellence)</h2>
+          <div class="image-panel"></div>
           <p class="hook">"La bonne question change tout."</p>
           <p class="synth">Une problématique claire structure toute la lecture linéaire.</p>
           <div class="excerpt">
@@ -711,9 +767,10 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" style="--card-bg: url('images/text-1/s4-2-conclusion.png');">
           <div class="chip">Outils pour l'oral</div>
           <h2 class="post-title">Conclusion prête à l'oral</h2>
+          <div class="image-panel"></div>
           <p class="hook">"Finir avec clarté et sens."</p>
           <p class="synth">Le poème montre que la poésie permet de traverser la mort sans l'effacer.</p>
           <div class="excerpt">
