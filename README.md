@@ -110,3 +110,9 @@ Le projet ne se concentre pas sur l’illustration ou le design, mais sur :
 Projet open-source — licence à définir.
 
 Les contenus pédagogiques sont destinés à un usage éducatif et non commercial.
+
+---
+
+## 🌐 Publication GitHub Pages
+
+Le workflow de publication est documenté ici : `docs/github-pages.md`.
