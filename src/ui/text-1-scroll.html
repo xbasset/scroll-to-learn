@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chambre de la douleur - Feed scrollable</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap"
+    />
+    <style>
+      :root {
+        --void: #090a0f;
+        --deep: #10131a;
+        --surface: #171b25;
+        --edge: #263042;
+        --text: #d7d9e2;
+        --muted: #8b92a4;
+        --accent: #f2a65a;
+        --accent-soft: rgba(242, 166, 90, 0.12);
+        --emerald: #6fd6b6;
+        --ink: #0c0f16;
+        --glow: rgba(242, 166, 90, 0.35);
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html, body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+        background: radial-gradient(circle at 20% 20%, #1a1f2d 0%, var(--void) 55%, #07080c 100%);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .stage {
+        position: relative;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+
+      .grain {
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        mix-blend-mode: screen;
+        opacity: 0.2;
+        pointer-events: none;
+      }
+
+      .glow {
+        position: absolute;
+        top: -20vh;
+        left: 50%;
+        width: 70vw;
+        height: 70vw;
+        transform: translateX(-50%);
+        background: radial-gradient(circle, var(--glow) 0%, transparent 65%);
+        opacity: 0.7;
+        filter: blur(10px);
+        pointer-events: none;
+      }
+
+      .feed {
+        position: relative;
+        height: 100vh;
+        overflow-y: auto;
+        scroll-snap-type: y mandatory;
+        padding: 48px 24px 80px;
+        display: grid;
+        gap: 28px;
+      }
+
+      .feed::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .feed::-webkit-scrollbar-thumb {
+        background: var(--edge);
+        border-radius: 999px;
+      }
+
+      .progress {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(520px, 80vw);
+        height: 3px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+        z-index: 20;
+      }
+
+      .progress span {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--emerald));
+        transition: width 0.2s linear;
+      }
+
+      .card {
+        position: relative;
+        width: min(560px, 92vw);
+        margin: 0 auto;
+        padding: 36px 34px 32px;
+        background: var(--surface);
+        border: 1px solid var(--edge);
+        border-radius: 22px;
+        box-shadow: 0 22px 50px rgba(3, 6, 15, 0.5);
+        scroll-snap-align: start;
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
+      }
+
+      .card.in-view {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        pointer-events: none;
+      }
+
+      .cover {
+        padding: 48px 38px 40px;
+        background: linear-gradient(135deg, rgba(242, 166, 90, 0.08), transparent 70%), var(--surface);
+      }
+
+      .meta {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+
+      .title {
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: clamp(28px, 4.8vw, 38px);
+        font-weight: 600;
+        color: #f2f3f7;
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        color: var(--muted);
+        margin-top: 8px;
+      }
+
+      .source {
+        margin-top: 20px;
+        padding: 16px 18px;
+        background: rgba(15, 18, 28, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .post-title {
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: 22px;
+        font-weight: 600;
+        color: #f1f2f8;
+        margin-bottom: 12px;
+      }
+
+      .hook {
+        font-style: italic;
+        font-size: 16px;
+        color: var(--accent);
+        margin-bottom: 12px;
+      }
+
+      .synth {
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--text);
+        margin-bottom: 16px;
+      }
+
+      .panel {
+        background: var(--deep);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 14px;
+        padding: 14px 16px 12px;
+      }
+
+      .panel-title {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+
+      .panel ul,
+      .panel ol {
+        padding-left: 18px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text);
+      }
+
+      .panel li + li {
+        margin-top: 6px;
+      }
+
+      .excerpt {
+        margin-bottom: 16px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(15, 18, 28, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .excerpt-title {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 8px;
+      }
+
+      .excerpt-quote {
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: 18px;
+        font-style: italic;
+        color: #f0e6da;
+        line-height: 1.5;
+        margin-bottom: 8px;
+      }
+
+      .excerpt-hint {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .poem {
+        margin-top: 16px;
+        padding: 18px 20px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(111, 214, 182, 0.08), transparent 65%), var(--deep);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .poem-stanza + .poem-stanza {
+        margin-top: 16px;
+      }
+
+      .poem-line {
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: 18px;
+        line-height: 1.6;
+        color: #f2f3f7;
+      }
+
+      .poem-line + .poem-line {
+        margin-top: 6px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        font-size: 11px;
+        color: var(--accent);
+        font-family: "JetBrains Mono", monospace;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+
+      .footer {
+        text-align: center;
+        font-size: 13px;
+        color: var(--muted);
+        padding-bottom: 40px;
+      }
+
+      .hint {
+        position: absolute;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 15;
+        opacity: 0.7;
+      }
+
+      .hint span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid var(--muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      @media (max-width: 540px) {
+        .feed {
+          padding: 32px 16px 80px;
+        }
+
+        .card {
+          padding: 28px 24px 26px;
+        }
+
+        .cover {
+          padding: 36px 28px 32px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="glow"></div>
+      <div class="grain"></div>
+      <div class="progress"><span id="progress-bar"></span></div>
+
+      <main class="feed" id="feed">
+        <article class="card cover in-view">
+          <div class="meta">Feed littéraire</div>
+          <h1 class="title">Chambre de la douleur</h1>
+          <p class="subtitle">René Guy Cadou - lecture linéaire et parcours de sens</p>
+          <div class="source">
+            Source principale : <strong>Chambre de la douleur</strong> (René Guy Cadou)
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Texte intégral</div>
+          <h2 class="post-title">Le poème</h2>
+          <div class="poem">
+            <div class="poem-stanza">
+              <p class="poem-line">Une goutte de sang reste encore sur la clé</p>
+              <p class="poem-line">Tu n'es plus là mon père</p>
+              <p class="poem-line">Tu n'es pas revenu de ce côté-ci de la terre</p>
+              <p class="poem-line">Depuis quatre ans</p>
+              <p class="poem-line">Et dans la chambre je t'attends</p>
+              <p class="poem-line">Pour remailler le filets bleus de la lumière</p>
+            </div>
+            <div class="poem-stanza">
+              <p class="poem-line">La première année j'eus bien froid</p>
+              <p class="poem-line">Bien du mal à porter la croix</p>
+              <p class="poem-line">Et j'usai mes belles mains blanches</p>
+              <p class="poem-line">À raboter mes propres planches</p>
+              <p class="poem-line">Déjà prêt à partir sans toi</p>
+            </div>
+            <div class="poem-stanza">
+              <p class="poem-line">Puis ce fut le printemps la pâque</p>
+              <p class="poem-line">Je te trouvai au fond de chaque</p>
+              <p class="poem-line">Sillon dans chaque grain de blé</p>
+              <p class="poem-line">Et dans la fleur ouverte aux flaques</p>
+              <p class="poem-line">Impitoyables de l'été</p>
+            </div>
+            <div class="poem-stanza">
+              <p class="poem-line">Jamais plus les oiseaux n'entreront dans la chambre</p>
+              <p class="poem-line">Ni le feu</p>
+              <p class="poem-line">Ni l'épaule admirable du soir</p>
+              <p class="poem-line">Et l'amour sera fait d'autres mains</p>
+              <p class="poem-line">D'autres lampes</p>
+              <p class="poem-line">Ô mon père</p>
+              <p class="poem-line">Afin que nous puissions nous voir</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Orienter la lecture</div>
+          <h2 class="post-title">Pourquoi lire Chambre de la douleur ?</h2>
+          <p class="hook">"Un poème de deuil, mais surtout un poème de survie."</p>
+          <p class="synth">Poème lyrique où Cadou transforme la perte du père en parcours intérieur, de la douleur à l'espérance.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">
+              "Tu n'es plus là mon père"<br />
+              "Afin que nous puissions nous voir"
+            </div>
+            <div class="excerpt-hint">Lien : l'ouverture finale répond au choc initial, pour aller vers la survie.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Repère d'analyse</div>
+            <ul>
+              <li>Œuvre inscrite dans la poésie lyrique du XXe siècle</li>
+              <li>Dimension autobiographique (mort du père en 1938)</li>
+              <li>Enjeu central pour l'oral : montrer l'évolution du regard du poète</li>
+              <li>Axe directeur possible : comment la poésie permet-elle de traverser la douleur ?</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Orienter la lecture</div>
+          <h2 class="post-title">Situation de l'extrait</h2>
+          <p class="hook">"La chambre : un lieu clos pour dire l'infini."</p>
+          <p class="synth">Un poème écrit après la mort du père, dans un espace symbolique : la chambre de la douleur.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">
+              "Et dans la chambre je t'attends"<br />
+              "Jamais plus les oiseaux n'entreront dans la chambre"
+            </div>
+            <div class="excerpt-hint">Lien : la chambre est à la fois lieu réel et espace mental du deuil.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Contexte de lecture</div>
+            <ul>
+              <li>René Guy Cadou : poète de la simplicité apparente</li>
+              <li>Poème souvent étudié à l'oral pour sa clarté structurelle</li>
+              <li>La chambre = espace mental, intime, mémoriel</li>
+              <li>Poésie accessible mais profondément construite</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Structure du poème</div>
+          <h2 class="post-title">Une construction en 5 quintils</h2>
+          <p class="hook">"Cinq moments pour traverser la perte."</p>
+          <p class="synth">Le poème progresse en cinq quintils qui correspondent à cinq étapes émotionnelles.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">
+              "Une goutte de sang reste encore sur la clé"<br />
+              "Puis ce fut le printemps la pâque"
+            </div>
+            <div class="excerpt-hint">Lien : deux moments éloignés font sentir la progression du récit.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Découpage proposé</div>
+            <ol>
+              <li>Entrée brutale dans la douleur</li>
+              <li>La mort du père</li>
+              <li>Le désespoir du fils</li>
+              <li>Les retrouvailles symboliques</li>
+              <li>Une ouverture vers la vie</li>
+            </ol>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Structure du poème</div>
+          <h2 class="post-title">Une progression du désespoir vers l'espérance</h2>
+          <p class="hook">"Du noir vers la lumière, sans effacer la douleur."</p>
+          <p class="synth">Le poème ne nie pas la mort mais apprend à vivre avec.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">
+              "Bien du mal à porter la croix"<br />
+              "Puis ce fut le printemps la pâque"
+            </div>
+            <div class="excerpt-hint">Lien : la saison nouvelle signale un glissement vers l'apaisement.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Mouvement global</div>
+            <ul>
+              <li>Mouvement global : enfermement -> ouverture</li>
+              <li>Alternance douleur / mémoire / renaissance</li>
+              <li>Derniers vers marqués par le retour du calme et de la respiration</li>
+              <li>Logique narrative + logique émotionnelle</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Lecture linéaire</div>
+          <h2 class="post-title">Quintil 1 : l'entrée dans la douleur</h2>
+          <p class="hook">"Tout commence par un choc."</p>
+          <p class="synth">Une douleur immédiate, sans explication, exprimée par une écriture simple et brute.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">
+              "Une goutte de sang reste encore sur la clé"<br />
+              "Tu n'es plus là mon père"
+            </div>
+            <div class="excerpt-hint">Lien : la blessure et l'absence placent le lecteur dans le choc initial.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Marques du choc initial</div>
+            <ul>
+              <li>Entrée abrupte dans le poème</li>
+              <li>Absence de préparation narrative</li>
+              <li>Lexique de la souffrance</li>
+              <li>Effet d'immersion : le lecteur est plongé dans l'émotion</li>
+              <li>Lyrisme direct, sans filtre</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Lecture linéaire</div>
+          <h2 class="post-title">Quintil 2 : dire la mort du père</h2>
+          <p class="hook">"La mort est dite sans pathos."</p>
+          <p class="synth">La mort du père apparaît de manière presque neutre, ce qui renforce sa violence.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">
+              "Depuis quatre ans"<br />
+              "Et dans la chambre je t'attends"
+            </div>
+            <div class="excerpt-hint">Lien : constat sobre + attente figent le temps du deuil.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Dire la mort</div>
+            <ul>
+              <li>Peu de verbes d'action</li>
+              <li>Écriture dépouillée</li>
+              <li>Refus de l'emphase</li>
+              <li>La sobriété rend la perte plus réelle</li>
+              <li>Temps figé, impression d'irréversibilité</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Lecture linéaire</div>
+          <h2 class="post-title">Quintil 3 : le désespoir du fils</h2>
+          <p class="hook">"Quand la douleur devient intérieure."</p>
+          <p class="synth">Le poète se replie sur lui-même, prisonnier de la chambre et du passé.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">
+              "La première année j'eus bien froid"<br />
+              "Déjà prêt à partir sans toi"
+            </div>
+            <div class="excerpt-hint">Lien : le froid et la tentation du départ traduisent l'épuisement.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Ressentir la perte</div>
+            <ul>
+              <li>Retour sur le passé</li>
+              <li>Enfermement symbolique</li>
+              <li>Chambre = lieu de mémoire et de souffrance</li>
+              <li>Le poème devient méditatif</li>
+              <li>Passage du fait (mort) au ressenti (désespoir)</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Lecture linéaire</div>
+          <h2 class="post-title">Quintil 4 : les retrouvailles symboliques</h2>
+          <p class="hook">"Le mort revient autrement."</p>
+          <p class="synth">Le père n'est plus vivant, mais il réapparaît dans la mémoire et l'imaginaire.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">
+              "Je te trouvai au fond de chaque"<br />
+              "Sillon dans chaque grain de blé"
+            </div>
+            <div class="excerpt-hint">Lien : le père est retrouvé dans la nature, par la mémoire.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Retrouvailles symboliques</div>
+            <ul>
+              <li>Retrouvailles non réelles, mais poétiques</li>
+              <li>Le souvenir devient source de présence</li>
+              <li>Fonction réparatrice de la poésie</li>
+              <li>La mort cesse d'être uniquement négative</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Lecture linéaire</div>
+          <h2 class="post-title">Quintil 5 : une ouverture vers la vie</h2>
+          <p class="hook">"Respirer à nouveau."</p>
+          <p class="synth">Le poème s'achève sur un apaisement et une possibilité de continuer à vivre.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">
+              "Et l'amour sera fait d'autres mains"<br />
+              "D'autres lampes"
+            </div>
+            <div class="excerpt-hint">Lien : la vie reprend, autrement, sans nier l'absence.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Ouverture finale</div>
+            <ul>
+              <li>Disparition progressive du lexique sombre</li>
+              <li>Retour du mouvement, de l'air, de la lumière</li>
+              <li>Espoir discret, non triomphal</li>
+              <li>La douleur demeure, mais elle est transformée</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Thèmes et notions clés</div>
+          <h2 class="post-title">Le lyrisme de la simplicité</h2>
+          <p class="hook">"Dire beaucoup avec peu."</p>
+          <p class="synth">Cadou choisit une écriture simple pour exprimer une émotion universelle.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">"Tu n'es plus là mon père"</div>
+            <div class="excerpt-hint">Lien : une phrase courte suffit à porter l'émotion.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Procédé de style</div>
+            <ul>
+              <li>Lexique courant</li>
+              <li>Syntaxe fluide</li>
+              <li>Émotion directe</li>
+              <li>Lyrisme non démonstratif</li>
+              <li>Poésie accessible mais profonde</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Thèmes et notions clés</div>
+          <h2 class="post-title">La chambre : un espace symbolique</h2>
+          <p class="hook">"Un lieu clos pour penser l'absence."</p>
+          <p class="synth">La chambre représente l'enfermement intérieur du poète.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">"Et dans la chambre je t'attends"</div>
+            <div class="excerpt-hint">Lien : la chambre devient le coeur du manque.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Sens du lieu</div>
+            <ul>
+              <li>Lieu intime</li>
+              <li>Lieu mental</li>
+              <li>Lieu de deuil</li>
+              <li>Opposition implicite chambre / monde extérieur</li>
+              <li>Évolution du sens de la chambre au fil du poème</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Thèmes et notions clés</div>
+          <h2 class="post-title">La poésie comme réparation</h2>
+          <p class="hook">"Écrire pour survivre."</p>
+          <p class="synth">Le poème transforme la douleur en parole et en lien.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">"Pour remailler le filets bleus de la lumière"</div>
+            <div class="excerpt-hint">Lien : l'image de la réparation dit le rôle de la parole.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Fonction de la poésie</div>
+            <ul>
+              <li>Fonction cathartique de l'écriture</li>
+              <li>Le poème comme tombeau poétique</li>
+              <li>La parole permet de continuer à vivre</li>
+              <li>Idée centrale à valoriser à l'oral</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Outils pour l'oral</div>
+          <h2 class="post-title">Problématique type (excellence)</h2>
+          <p class="hook">"La bonne question change tout."</p>
+          <p class="synth">Une problématique claire structure toute la lecture linéaire.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">"Puis ce fut le printemps la pâque"</div>
+            <div class="excerpt-hint">Lien : ce vers aide à formuler le passage du deuil à l'espérance.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Problématique possible</div>
+            <ul>
+              <li>Comment Cadou transforme-t-il la douleur du deuil en chemin vers l'espérance ?</li>
+              <li>En quoi Chambre de la douleur est-il un poème de survie autant que de deuil ?</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="chip">Outils pour l'oral</div>
+          <h2 class="post-title">Conclusion prête à l'oral</h2>
+          <p class="hook">"Finir avec clarté et sens."</p>
+          <p class="synth">Le poème montre que la poésie permet de traverser la mort sans l'effacer.</p>
+          <div class="excerpt">
+            <div class="excerpt-title">Extrait</div>
+            <div class="excerpt-quote">"Afin que nous puissions nous voir"</div>
+            <div class="excerpt-hint">Lien : la clôture ouvre une relation durable, sans nier la perte.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Conclusion possible</div>
+            <ul>
+              <li>Récapitulatif du mouvement global</li>
+              <li>Insistance sur la transformation de la douleur</li>
+              <li>Ouverture possible vers d'autres poèmes de deuil</li>
+              <li>Formulation fluide, réutilisable à l'oral</li>
+            </ul>
+          </div>
+        </article>
+
+        <div class="footer">Fin du feed - scroller pour réviser, réviser pour s'exprimer.</div>
+      </main>
+
+      <div class="hint"><span></span>Scroll</div>
+    </div>
+
+    <script>
+      const feed = document.getElementById('feed');
+      const progressBar = document.getElementById('progress-bar');
+      const cards = document.querySelectorAll('.card');
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('in-view');
+            }
+          });
+        },
+        { threshold: 0.5 }
+      );
+
+      cards.forEach((card) => observer.observe(card));
+
+      const updateProgress = () => {
+        const maxScroll = feed.scrollHeight - feed.clientHeight;
+        const progress = maxScroll > 0 ? (feed.scrollTop / maxScroll) * 100 : 0;
+        progressBar.style.width = `${progress}%`;
+      };
+
+      feed.addEventListener('scroll', updateProgress, { passive: true });
+      updateProgress();
+    </script>
+  </body>
+</html>
